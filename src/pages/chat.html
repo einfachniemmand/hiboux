@@ -1,3 +1,4 @@
+<!-- This is expirimental, nobodys probably about to use this !-->
 <!DOCTYPE html>
 <html oncontextmenu="return false" lang="de-de">
 <head>
@@ -72,7 +73,7 @@
                 fetchAPI:(prompt_old)=>{
                     localStorage.setItem("last_ai_use",Math.floor(new Date().getTime()/1000)+60)
                     const prompt = "Please create a long text/explanation using standart markdown without a headline about this french word, holiday or speciality. Please refer to all conjugations etc and answer in german only: " + prompt_old;
-                    fetch ("https://hakuna-matata.einfachniemmand-project.workers.dev/website/", {
+                    fetch ("", { // Get your own API :D
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
