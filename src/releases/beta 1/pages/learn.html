@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html oncontextmenu="return false" lang="de-de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hiboux</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../static/style/global.css">
+    <script src="../static/script/default.js"></script>
+</head>
+<body>
+    <div class="content">
+        <div class="learn-content">
+            <div class="learn-status">
+                <div class="learn-x" onclick="app.click.exit.ask()"><i class="fa-solid fa-xmark"></i></div>
+                <div class="learn-progress"><div><span></span></div></div>
+            </div>
+            <div class="lesson">
+                <div class="type-ask">
+                    <div class="type-explanation">Übersetze</div>
+                    <div class="card-animation-keyframe">
+                        <div class="card">
+                            <span class="card-word"><span class="raw-word"></span></span>
+                            <div class="card-indc"></div>
+                            <label class="card-translation" for="type-ask-card">
+                                <input class="card-translation" placeholder="Übersetzung" id="type-ask-card">
+                            </label>
+                        </div>
+                        <div class="card card-solution">
+                            <span class="card-word"><span class="raw-word-ans"></span></span>
+                            <div class="card-indc"></div>
+                            <label class="card-translation" for="type-ask-card-none">
+                                <span class="card-word-solution"><span></span></span>
+                            </label>
+                        </div>
+                        <div class="optic-finement-card"></div>
+                    </div>
+                    <button class="default next-btn" onclick="if(app.state=='guess'){this.textContent='Weiter';app.click.reveal();}else if(app.state=='finish'){app.saveProgress();app.click.exit.exit()}else{app.click.swipe();this.textContent='Überprüfen'}">Überprüfen</button>
+                </div>
+            </div>
+        </div>
+        <div class="ask-outer hidden" style="display: none;" onclick="if(event.target === this) app.click.exit.close()">
+            <div class="ask-box">
+                <span class="header">Übung beenden?</span>
+                <button class="default red" onclick="setTimeout(app.click.exit.exit,150)">Jetzt aufhören</button>
+                <button class="default-small" onclick="app.click.exit.close()">Weiterlernen</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+        function simplify(str, ste) {
+            const map = {
+            ä: "a", ö: "o", ü: "u",
+            Ä: "A", Ö: "O", Ü: "U",
+            é: "e", è: "e", ê: "e", ë: "e",
+            à: "a", â: "a", á: "a",
+            ù: "u", û: "u", ú: "u",
+            ô: "o", ó: "o",
+            î: "i", ï: "i", í: "i",
+            œ: "o", æ: "a",
+            ç: "c",
+            ñ: "n"
+            };
+            const process = s => {
+            if (ste) {
+                return s
+                .replace(/[^a-zA-Z0-9 ]/g, "")
+                .toLowerCase()
+                .replace(/[!"§$%&\/()=?\\}\]\[{\-.,;:_]/g, "")
+                .trim();
+            } else {
+                return s
+                .split("")
+                .map(c => map[c] ?? c)
+                .join("")
+                .replace(/[^a-zA-Z0-9 ]/g, "")
+                .toLowerCase()
+                .replace(/[!"§$%&\/()=?\\}\]\[{\-.,;:_]/g, "")
+                .trim();
+            }
+            };
+            if (Array.isArray(str)) {
+            return str.map(process);
+            } else {
+            return process(str);
+            }
+        }
+        const app = {
+            click : {
+                reset:()=>{
+                    document.querySelector(".content").style.transition = "300ms";
+                    localStorage.setItem("state","lists");
+                    setTimeout(()=>{
+                        document.querySelector(".content").classList.add("fadeout");
+                        setTimeout(()=>{location.href = "lists.html"},350)
+                    },10)
+                },
+                swipe:()=>{
+                    document.querySelector('.card-solution').classList.remove('reveal');
+                    document.querySelector('.card-solution').classList.add('swipe');
+                    setTimeout(()=>{
+                        document.querySelector('.card-solution').classList.add('hidden');
+                        document.querySelector('.card-solution').classList.remove('swipe');
+                    },500)
+                    app.state = "guess"
+                    app.loadNextWord()
+                },
+                reveal:()=>{
+                    document.querySelector('.card-solution').classList.add('reveal');
+                    document.querySelector('.card-solution').classList.remove('hidden');
+                    const input = document.querySelector("#type-ask-card").value;
+                    app.list.pop()
+                    if(app.checkWord(input,app.word.solution.split(",")[1] ? app.word.solution.split(",") : app.word.solution)){
+                        if (app.word.solution.split(",")[1]) {
+                            document.querySelector(".card-word-solution span").innerHTML = `<t>${app.word.solution.split(",").join(" / ")}</t>`;
+                        } else {
+                            document.querySelector(".card-word-solution span").innerHTML = `<t>${app.word.solution}</t>`;
+                        }
+                        app.sound.play.correct()
+                        app.word.done++;
+                        app.totalRight++;
+                    }else{
+                        if (app.word.solution.split(",")[1]) {
+                            document.querySelector(".card-word-solution span").innerHTML = `<f>${app.word.solution.split(",").join(" / ")}</f>`;
+                        } else {
+                            document.querySelector(".card-word-solution span").innerHTML = `<f>${app.word.solution}</f>`;
+                        }
+                        if(localStorage.getItem('rww')=='true'){
+                            app.list.unshift(app.word.a);
+                        }else{
+                            app.word.done++;
+                        }
+                    }
+                    app.totalTries++;
+                    document.querySelector("div.learn-progress div").style.width=`${(app.word.done/(app.list.length+app.word.done))*100}%`
+                    if(app.list.length==0){
+                        document.querySelector("button.default.next-btn").textContent = "Fertig"
+                        app.state='finish'
+                    }else{
+                        app.state = "revealed";
+                    }
+                },
+                exit:{
+                    ask:()=>{
+                        document.querySelector(".ask-outer").style.display = "flex";
+                        setTimeout(()=>{document.querySelector(".ask-outer").classList.remove('hidden')},10)
+                    },
+                    close:()=>{
+                        document.querySelector(".ask-outer").classList.add('hidden')
+                        setTimeout(()=>{document.querySelector(".ask-outer").style.display = "none";},400)
+                    },
+                    exit:()=>{
+                        document.querySelector(".content").style.transition = "300ms";
+                        localStorage.setItem("state","edit");
+                        setTimeout(()=>{
+                            document.querySelector(".content").style.opacity = "0";
+                            setTimeout(()=>{location.href = "edit.html"},300)
+                        },10)
+                    }
+                }
+            },
+            totalTries:0,
+            totalRight:0,
+            loadNextWord:()=>{
+                app.word.a = app.list[app.list.length-1]
+                app.word.solution = (localStorage.getItem('atr') == 'true' ? app.word.a[1] : app.word.a[0]).replaceAll('<','&gt;');
+                app.word.wordToShow = (localStorage.getItem('atr') == 'true' ? app.word.a[0] : app.word.a[1]).replaceAll('<','&gt;');
+                document.querySelector("#type-ask-card").value = "";
+                const wordToShow = app.word.wordToShow;
+                var output = "";
+                if (wordToShow.includes(",")) {
+                    shuffle(wordToShow.split(",").map(w => w.trim())).forEach((part,i) => {
+                        output += `${(i==0||i-1==wordToShow.split(",").map(w => w.trim()).length) ? '' : '/'}<div data-index="${i}" onclick="this.setAttribute('data-index','0')">${part}</div>`;
+                    });
+                } else {
+                    output = wordToShow;
+                }
+                document.querySelector(".raw-word").innerHTML = output;
+                document.querySelector(".raw-word-ans").innerHTML = output;
+            },
+            checkWord:(word,correct)=>{
+                word = simplify(word,localStorage.getItem('brf') ? true : null);
+                correct = simplify(correct,localStorage.getItem('brf') ? true : null);
+                if(Array.isArray(correct)) return correct.includes(word)
+                return word === correct
+            },
+            word:{},
+            sound:{
+                correct: new Audio('/static/media/correct.mp3'),
+                play:{
+                    correct:()=>{
+                        app.sound.correct.currentTime = 0;
+                        app.sound.correct.volume = 0.7;
+                        app.sound.correct.play()
+                    }
+                }
+            },
+            saveProgress:()=>{
+                const obj = JSON.parse(localStorage.getItem("vocab_lists"));
+                obj[localStorage.getItem("lecture")].progress = Math.floor((app.totalRight/app.totalTries)*100);
+                localStorage.setItem("vocab_lists",JSON.stringify(obj))
+            }
+        }
+        window.onload = function () {
+            document.body.querySelector(".content").style.opacity = "1";
+            app.state = "guess";
+            app.list = shuffle(JSON.parse(localStorage.getItem("vocab_lists"))[localStorage.getItem("lecture")].contents);
+            app.word.done = 0;
+            app.loadNextWord();
+        }
+    </script>
+</body>
+</html>

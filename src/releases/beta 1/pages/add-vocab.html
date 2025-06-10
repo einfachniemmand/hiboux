@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html oncontextmenu="return false" lang="de-de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hiboux</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../static/style/global.css">
+    <script src="../static/script/default.js"></script>
+</head>
+<body>
+    <div class="content" style="width: 100%;height: 100vh;">
+        <div class="vocab-inputs-box">
+            <div style="position: relative;">
+                <div class="vocab-inputs">
+                    <input type="text" class="vocab-field input" placeholder="Hallo" autofocus onkeyup="debouncedSuggestions(this.value);app.genHint(document.querySelector('.hint-1'),this);app.genDoneBtn()">
+                    <div class="translations-hint hint-1 hidden">Du hast <n>zwei</n> Übersetzungen hinzugefügt</div>
+                    <div style="display: flex;">
+                        <div style="display: flex; flex-direction: column; width: 100%;">
+                            <input type="text" class="vocab-field" placeholder="Salut" autocorrect="off" id="french-vocab-field" onkeyup="app.genHint(document.querySelector('.hint-2'),this);app.genDoneBtn()">
+                            <label for="french-vocab-field" class="vocab-suggestions"></label>
+                        </div>
+                        <div class="add-word hidden" onclick="app.click.addWord(this)">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    <div class="translations-hint hint-2 hidden">Du hast <n>zwei</n> Übersetzungen hinzugefügt</div>
+                </div>
+                <span class="tipp">Tipp: Trenne mehrere Übersetzungen mit Komata</span>
+                <div class="outcast-vocab-inputs"></div>
+            </div>
+        </div>
+        <div class="raw-vocab" style="padding-bottom:110px"></div>
+        <div class="outcast-bottom"></div>
+        <button class="default bottom" onclick="setTimeout(app.click.finish,125)">Fertig</button>
+    </div>
+    <script>
+        const app = {
+            click : {
+                reset:()=>{
+                    document.querySelector(".content").style.transition = "300ms";
+                    localStorage.setItem("state","lists");
+                    setTimeout(()=>{
+                        document.querySelector(".content").classList.add("fadeout");
+                        setTimeout(()=>{location.href = "lists.html"},350)
+                    },10)
+                },
+                fill:(e)=>{
+                    e.style.display = "none";
+                    const text = e.querySelector("span").textContent;
+                    const input = document.querySelector("#french-vocab-field").value.trim();
+                    if(input[input.length-1]==","){
+                        document.querySelector("#french-vocab-field").value += text.trim();
+                    }else{
+                        document.querySelector("#french-vocab-field").value = text.trim();
+                    }
+                    app.genDoneBtn()
+                },
+                addWord:(target)=>{
+                    target.classList.add("hidden");
+                    const german = document.querySelector("input:not(#french-vocab-field)");
+                    const french = document.querySelector("input#french-vocab-field");
+                    app.addedVocab.push([french.value,german.value])
+                    app.render.words([[french.value,german.value]])
+                    german.value = "";
+                    french.value = "";
+                    document.querySelector(".vocab-suggestions").innerHTML=""
+                    app.genHint(document.querySelector(".hint-2"),french)
+                    app.genHint(document.querySelector(".hint-1"),german)
+                },
+                removeWord:(target)=>{
+                    target.classList.add("removed")
+                    setTimeout(()=>{target.style.display="none"},150)
+                    const index = parseInt(target.getAttribute("data-index"));
+                    if (!isNaN(index)) {
+                        app.addedVocab.splice(index-1, 1);
+                    }
+                    console.log(app.addedVocab)
+                },
+                finish:()=>{
+                    document.querySelector("button.default.bottom").classList.add("fadeout");
+                    document.querySelector(".content").style.transition = "300ms";
+                    localStorage.setItem("state","edit");
+                    const obj = JSON.parse(localStorage.getItem("vocab_lists"))
+                    obj[localStorage.getItem("lecture")].contents = app.addedVocab ? app.addedVocab : [];
+                    localStorage.setItem("vocab_lists",JSON.stringify(obj))
+                    setTimeout(()=>{
+                        document.querySelector(".content").classList.add("fadeout");
+                        setTimeout(()=>{location.href = "edit.html"},350)
+                    },350)
+                }
+            },
+            createSuggestions:(input)=>{
+                input = input.trim().replaceAll("jdm","jemandem").replaceAll("jdn","jemanden").replaceAll("etw","etwas");
+                const output = document.querySelector(".vocab-suggestions");
+                if(input==""){return}
+                fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=de&tl=fr&dt=t&q=${input}`)
+                .then(res => res.json())
+                .then(data => {
+                    if(data[0][0][0].trim() == ""){return}
+                    if(document.querySelector("input:not(#french-vocab-field)").value.trim()==""){return}
+                    output.innerHTML += `<div onclick='app.click.fill(this)' class='suggestion'><i class="fa-solid fa-book-open"></i><span>${data[0][0][0].replaceAll("Une","une").replaceAll("Un","un").replaceAll("Le","le").replaceAll("La","la").replaceAll("quelqu'un","qn").replaceAll("quelque chose","qc")}</span</div>`
+                })
+                .catch(err => {
+                    console.error("Error:", err)
+                })
+            },
+            genHint:(output,target)=>{
+                const input = target.value.trim();
+                const numbers = ["","","zwei","drei","vier","fünf","sechs"]
+                if(input.split(",").length>1){
+                    output.querySelector("n").textContent = numbers[input.split(",").length] ? numbers[input.split(",").length] : input.split(",").length;
+                    output.classList.remove("hidden")
+                }else{
+                    output.classList.add("hidden")
+                }
+            },
+            genDoneBtn:()=>{
+                if(document.querySelector("input:not(#french-vocab-field)").value.replaceAll(",","").trim() != "" && document.querySelector("input#french-vocab-field").value.replaceAll(",","").trim()) {
+                    document.querySelector(".add-word").classList.remove("hidden")
+                }else{
+                    document.querySelector(".add-word").classList.add("hidden")
+                }
+            },
+            render:{
+                words:(words)=>{
+                    words.forEach((e,i)=>{
+                        function renderParts(str) {
+                            const parts = str.split(",").map(s => s.trim()).filter(Boolean);
+                            if (parts.length > 1) {
+                                return parts.map(p => `<div class='part-trans'>${p}</div>`).join("");
+                            } else {
+                                return parts[0] ? parts[0] : "&ensp;";
+                            }
+                        }
+                        document.querySelector(".raw-vocab").innerHTML += `
+                            <div class="translation" data-index="${app.addedVocab.length}" onclick='app.click.removeWord(this)'>
+                                <div class="word" data-voice="Celine">
+                                    <div class="raw">${renderParts(e[0])}</div>
+                                </div>
+                                <div class="indc-word"></div>
+                                <div class="word" data-voice="Marlene">
+                                    <div class="raw">${renderParts(e[1])}</div>
+                                </div>
+                            </div>
+                        `
+                    })
+                }
+            }
+        }
+        window.onload = function () {
+            document.body.querySelector(".content").style.opacity = "1";
+            app.addedVocab = JSON.parse(localStorage.getItem("vocab_lists"))[localStorage.getItem("lecture")].contents;
+        }
+        let debounceTimeout;
+        let lastValue = "";
+        function debouncedSuggestions(value) {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(() => {
+                if(lastValue==value.replaceAll(",","")){return}
+                document.querySelector(".vocab-suggestions").innerHTML = ""
+                lastValue = value.replaceAll(",","");
+                value.split(",").forEach((v)=>{app.createSuggestions(v)})
+            }, 600);
+        }
+    </script>
+</body>
+</html>

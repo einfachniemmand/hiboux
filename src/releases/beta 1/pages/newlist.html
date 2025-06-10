@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html oncontextmenu="return false" lang="de-de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hiboux</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../static/style/global.css">
+    <script src="../static/script/default.js"></script>
+</head>
+<body>
+    <div class="content">
+        <span class="header">Los geht's!</span>
+        <span class="description">Wähle einen zutreffenden Namen und eine Farbe für deine neue Vokabelliste aus.</span>
+        <input type="text" autocapitalize="off" autocorrect="off" autofocus class="default choose-name" placeholder="Vokabelliste">
+        <div class="choose-color">
+            <input type="radio" name="color" id="color-1" hidden checked>
+            <label for="color-1" class="color" style="margin-left: 10px;background: rgb(250, 211, 36);"></label>
+            <input type="radio" name="color" id="color-2" hidden>
+            <label for="color-2" class="color" style="background:rgb(112, 250, 245);"></label>
+            <input type="radio" name="color" id="color-3" hidden>
+            <label for="color-3" class="color" style="background: rgb(97, 232, 171);"></label>
+            <input type="radio" name="color" id="color-4" hidden>
+            <label for="color-4" class="color" style="margin-right: 10px;background:  rgb(219, 168, 86);"></label>
+        </div>
+        <button class="default" onclick="app.click.create()"><i class="fa-solid fa-plus"></i>Erstellen</button>
+    </div>
+    <script>
+        const app = {
+            lists : "",
+            click : {
+                create:()=>{
+                    const curLists= JSON.parse(localStorage.getItem("vocab_lists")) ? JSON.parse(localStorage.getItem("vocab_lists")) : {};
+                    var rgbvalue = document.querySelector('input:checked + label.color').style.background;
+                    var initValue = document.querySelector("input.choose-name").value.trim();
+                    if(initValue==""){
+                        document.querySelector("input.choose-name").value = app.genName(curLists);
+                        document.querySelector("input.choose-name").focus();
+                    }else{
+                        setTimeout(()=>{
+                            const contructObject = {"name":initValue,"color":rgbvalue,"contents":[]}
+                            curLists[initValue]=contructObject;
+                            localStorage.setItem("vocab_lists",JSON.stringify(curLists))
+                            app.click.back()
+                        },150)
+                    }
+                },
+                back:()=>{
+                    document.querySelector(".content").style.transition = "300ms";
+                    localStorage.setItem("state","lists");
+                    setTimeout(()=>{
+                        document.querySelector(".content").classList.add("fadeout");
+                        setTimeout(()=>{location.href = "lists.html"},300)
+                    },10)
+                }
+            },
+            placeholders:[
+                "Vokabelliste",
+                "Atelier B12",
+                "Meine verranzten Socken",
+                "Lecker Lakritze",
+                "Gorgeous Brokkoli"
+            ],
+            pc:0,
+            genName:(obj)=>{
+                var num = 1;
+                const pre = "Vokabelliste ";
+                while(obj[pre+num]){
+                    num++;
+                }
+                return pre+num
+            }
+        }
+        window.onload = function () {
+            document.body.querySelector(".content").style.opacity = "1";
+            setInterval(()=>{
+                app.pc = app.pc+1 == app.placeholders.length ? 0 : app.pc+1;
+                document.querySelector(".choose-name").placeholder = app.placeholders[app.pc];
+            },4000)
+        }
+    </script>
+</body>
+</html>
