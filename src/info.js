@@ -1,5 +1,5 @@
 const info = {
-    "ver":"alpha 2",
+    "ver":"alpha 2.1",
     "inv":"Benno Florentin Kahmann",
     "github":"einfachniemmand",
     "services":[
