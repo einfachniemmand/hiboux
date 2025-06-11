@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="../static/style/global.css">
     <link rel="stylesheet" href="../static/style/toggle.css">
     <script src="../static/script/default.js"></script>
+    <script src="../info.js"></script>
 </head>
 <body>
     <div class="content">
@@ -41,7 +42,7 @@
             <button class="default"><i class="fa-solid fa-i-cursor"></i>Code eingeben</button>
             <button class="default" onclick="setTimeout(()=>{app.exit()},125)"><i class="fa-solid fa-door-open"></i>Einstellungen schließen</button>
             <button class="default red" onclick="setTimeout(()=>{app.deleteData()},125)"><i class="fa-solid fa-trash"></i>Alle Daten löschen</button>
-            <button class="default github-btn" onclick="setTimeout(()=>{window.open(app.github)},350)"><i class="fa-brands fa-github"></i>GitHub</button>
+            <button class="default github-btn" onclick="setTimeout(()=>{alert(app.github)},350)"><i class="fa-brands fa-github"></i>GitHub</button>
         </div>
         <div class="notice"></div>
     </div>
@@ -65,18 +66,13 @@
         }
         window.onload = function () {
             document.body.querySelector(".content").style.opacity = "1";
-            fetch("../info.json")
-            .then(info=>info.json())
-            .then(info=>{
                 document.querySelector(".notice").innerHTML = `
-                    <c>Version ${info.ver}</c><br>
-                    <i>We</i> shall mean the legal owner of the provided software, ${info.inv}.
-                    We may or may not use the listed services below:<br>-
-                    ${info.services.join(`<br>- `)}<br><br>
-                    ${info.license}
-                `
-                app.github = `https://github.com/${info.github}`
-            })
+                <c>Version ${info.ver}</c><br>
+                <i>We</i> shall mean the legal owner of the provided software, ${info.inv}.
+                We may or may not use the listed services below:<br>-
+        ${info.services.join("<br>- ")}<br><br>
+                ${info.license}`
+            app.github = info.github;
             document.querySelector("#toggle-checkbox-1").checked = JSON.parse(localStorage.getItem('brf') ? localStorage.getItem('brf') : 'false')
             document.querySelector("#toggle-checkbox-2").checked = JSON.parse(localStorage.getItem('atr') ? localStorage.getItem('atr') : 'false')
             document.querySelector("#toggle-checkbox-3").checked = JSON.parse(localStorage.getItem('rww') ? localStorage.getItem('rww') : 'false')
