@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html oncontextmenu="return false" lang="de-de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hiboux</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../static/style/global.css">
+    <script src="../static/script/default.js"></script>
+</head>
+<body>
+    <div class="content">
+        <span class="header">Update verfügbar</span>
+        <span class="description">Diese Version musst du dir herunterladen, da sie kritisch für Sicherheit und Funktionalität ist.</span>
+        <div class="button-column">
+            <button class="default" onclick="app.download()"><i class="fa-solid fa-circle-arrow-down"></i>Installieren</button>
+        </div>
+    </div>
+    <script>
+        const app = {
+            download:()=>{
+                window.open("http://hiboux.fwh.is/?download=app");
+            }
+        }
+        window.onload = function () {
+            document.body.querySelector(".content").style.opacity = "1";
+        }
+    </script>
+</body>
+</html>
