@@ -72,7 +72,7 @@
                 We may or may not use the listed services below:<br>-
         ${info.services.join("<br>- ")}<br><br>
                 ${info.license}`
-            app.github = info.github;
+            app.github = "https://github.com/"+info.github;
             document.querySelector("#toggle-checkbox-1").checked = JSON.parse(localStorage.getItem('brf') ? localStorage.getItem('brf') : 'false')
             document.querySelector("#toggle-checkbox-2").checked = JSON.parse(localStorage.getItem('atr') ? localStorage.getItem('atr') : 'false')
             document.querySelector("#toggle-checkbox-3").checked = JSON.parse(localStorage.getItem('rww') ? localStorage.getItem('rww') : 'false')
