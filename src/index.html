@@ -79,10 +79,12 @@
             fetch("https://raw.githubusercontent.com/einfachniemmand/hiboux/refs/heads/main/version/latest.json?t="+new Date().getTime())
             .then(ver=>ver.json())
             .then(ver=>{
-                if(ver.name!=info.ver){
+                if(ver.name!=info.ver && localStorage.getItem("state")!="update"){
                     localStorage.setItem("state","update")
-                }else if(localStorage.getItem("state")=="update"){
+                    window.onload()
+                }else if(ver.name==info.ver&&localStorage.getItem("state")=="update"){
                     localStorage.setItem("state","lists")
+                    window.onload()
                 }
             })
             .catch(error=>{
