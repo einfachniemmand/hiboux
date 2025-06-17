@@ -25,12 +25,23 @@
         </div>
     </div>
     <iframe id="content" allowfullscreen></iframe>
+    <div class="ask-outer hidden" style="display: none;" onclick="if(event.target === this) app.exit.close()">
+        <div class="ask-box">
+            <span class="header">Änderungen verwerfen?</span>
+            <button class="default red" onclick="setTimeout(app.exit.exit,150)">Ja, auf jeden Fall</button>
+            <button class="default-small" onclick="app.exit.close()">Abbrechen</button> 
+        </div>
+    </div>
     <script>
         //localStorage.clear()
         //localStorage.removeItem("state")
-        app = {
+        var app = {
             click:{
                 reload:()=>{
+                    if(app.restrictExit.includes(localStorage.getItem("state"))){
+                        handleBackArrow()
+                        return
+                    }
                     localStorage.setItem("state","lists");
                     document.querySelector("#content").style.opacity = "0"
                     setTimeout(window.onload,160)
@@ -57,7 +68,18 @@
             },
             focusSites:["reset","settings","learn","chat","update"],
             recallList:[],
-            recordaccess:1
+            recordaccess:1,
+            noExit:["learn"],
+            restrictExit:["add-vocab","learn"],
+            exit:{
+                close:()=>{
+                    document.querySelector(".ask-outer").classList.add('hidden')
+                    setTimeout(()=>{document.querySelector(".ask-outer").style.display = "none";},400)
+                },
+                exit:()=>{
+                    handleBackArrow(true)
+                }
+            }
         }
         window.onload = function () {
             if(!localStorage.getItem("state")){
@@ -91,8 +113,9 @@
                 console.error(error.message);
             })
         }
-        function handleBackArrow () {
-            if(app.recallList.length>1){
+        function handleBackArrow (skiptest) {
+            if(app.noExit.includes(localStorage.getItem("state"))) return
+            if((app.recallList.length>1&&(skiptest||(!app.restrictExit.includes(localStorage.getItem("state")))))){
                 app.recordaccess=0;
                 localStorage.setItem("state",app.recallList[app.recallList.length-2]);
                 document.querySelector("#content").style.opacity = "0"
@@ -104,9 +127,23 @@
                 setTimeout(()=>{
                     document.querySelector("#content").style.opacity = "1";
                 },200)
+                app.exit.close()
+            }else if(app.restrictExit.includes(localStorage.getItem("state"))&&!skiptest) {
+                document.querySelector(".ask-outer").style.display = "";
+                setTimeout(()=>{
+                    document.querySelector(".ask-outer").classList.remove("hidden");
+                },10)
+            }else if (skiptest){
+                localStorage.setItem("state","lists");
+                document.querySelector("#content").style.opacity = "0"
+                setTimeout(window.onload,160)
+                setTimeout(()=>{
+                    document.querySelector("#content").style.opacity = "1";
+                },400)
+                app.exit.close()
             }
         }
-        document.addEventListener("keydown", function(event) {
+        window.addEventListener("keydown", function(event) {
             if (event.key === "ArrowLeft") {
                 handleBackArrow();
             }
