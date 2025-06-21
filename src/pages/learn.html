@@ -19,7 +19,7 @@
                 <div class="learn-progress"><div><span></span></div></div>
             </div>
             <div class="lesson">
-                <div class="type-ask">
+                <div class="type-ask" style="transition:150ms;display:none" class="hide-mode">
                     <div class="type-explanation">Übersetze</div>
                     <div class="card-animation-keyframe">
                         <div class="card">
@@ -40,6 +40,31 @@
                     </div>
                     <button class="default next-btn" onclick="if(app.state=='guess'){this.textContent='Weiter';app.click.reveal();}else if(app.state=='finish'){app.saveProgress();app.click.exit.exit()}else{app.click.swipe();this.textContent='Überprüfen'}">Überprüfen</button>
                 </div>
+                <div class="type-match" style="transition:150ms;display:none" class="hide-mode">
+                    <div class="type-explanation">Verbinde</div>
+                    <div class="all-match-contents">
+                        <div class="left-match">
+                            <input id="match-left-1" name="match-left" type="radio" hidden onchange="app.match.check()">
+                            <label for="match-left-1"></label>
+                            <input id="match-left-2" name="match-left" type="radio" hidden onchange="app.match.check()">
+                            <label for="match-left-2"></label>
+                            <input id="match-left-3" name="match-left" type="radio" hidden onchange="app.match.check()">
+                            <label for="match-left-3"></label>
+                            <input id="match-left-4" name="match-left" type="radio" hidden onchange="app.match.check()">
+                            <label for="match-left-4"></label>
+                        </div>
+                        <div class="right-match">
+                            <input id="match-right-1" name="match-right" type="radio" hidden onchange="app.match.check()">
+                            <label for="match-right-1"></label>
+                            <input id="match-right-2" name="match-right" type="radio" hidden onchange="app.match.check()">
+                            <label for="match-right-2"></label>
+                            <input id="match-right-3" name="match-right" type="radio" hidden onchange="app.match.check()">
+                            <label for="match-right-3"></label>
+                            <input id="match-right-4" name="match-right" type="radio" hidden onchange="app.match.check()">
+                            <label for="match-right-4"></label>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="ask-outer hidden" style="display: none;" onclick="if(event.target === this) app.click.exit.close()">
@@ -51,6 +76,7 @@
         </div>
     </div>
     <script>
+        const urlParams = new URLSearchParams(window.location.search);
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -113,7 +139,8 @@
                         document.querySelector('.card-solution').classList.remove('swipe');
                     },500)
                     app.state = "guess"
-                    app.loadNextWord()
+                    app.curType = app.list.length>3 ? shuffle(urlParams.get("methods").split(","))[0] : "write";
+                    app.checkState()
                 },
                 reveal:()=>{
                     document.querySelector('.card-solution').classList.add('reveal');
@@ -187,6 +214,7 @@
                 }
                 document.querySelector(".raw-word").innerHTML = output;
                 document.querySelector(".raw-word-ans").innerHTML = output;
+                document.querySelector("#type-ask-card").focus()
             },
             checkWord:(word,correct)=>{
                 word = simplify(word,localStorage.getItem('brf') ? true : null);
@@ -195,8 +223,57 @@
                 return word === correct
             },
             word:{},
+            match:{
+                check:()=>{
+                    const items = [
+                        document.querySelector(".right-match input:checked"),
+                        document.querySelector(".left-match input:checked")
+                    ]
+                    document.querySelectorAll(".wrong").forEach(e=>{
+                        e.classList.remove("wrong")
+                    })
+                    if(items[0]&&items[1]){
+                        const words = [
+                            document.querySelector(".right-match input:checked + label").getAttribute("data-key"),
+                            document.querySelector(".left-match input:checked + label").getAttribute("data-key")
+                        ]
+                        setTimeout(()=>{
+                            items[0].checked = false;
+                            items[1].checked = false;
+                        },250)
+                        app.word.done++;
+                        app.totalTries++;
+                        if(app.match.keys.some(pair=>pair[0] === words[0]&&pair[1] === words[1])){
+                            items[0].classList.add("right")
+                            items[1].classList.add("right")
+                            items[0].disabled = "disabled";
+                            items[1].disabled = "disabled";
+                            app.sound.play.correct();
+                            app.list.pop();
+                            app.totalRight++;
+                        }else{
+                            items[0].classList.add("wrong")
+                            items[1].classList.add("wrong")
+                        }
+                        document.querySelector("div.learn-progress div").style.width=`${(app.word.done/(app.list.length+app.word.done))*100}%`
+                        app.finishedWords.unshift([words[0],words[1]])
+                    }
+                    if(app.list.length==0){
+                        setTimeout(()=>{
+                            app.saveProgress();
+                        },500)
+                        app.click.exit.exit()
+                    }else if(!document.querySelector(".all-match-contents input:not(:disabled)")){
+                        app.curType = app.list.length>3 ? shuffle(urlParams.get("methods").split(","))[0] : "write";
+                        if(app.list.length<4&&!urlParams.get("methods").split(",").includes("write")){
+                            app.curType=shuffle(urlParams.get("methods").split(","))[0];
+                        }
+                        app.checkState()
+                    };
+                }
+            },
             sound:{
-                correct: new Audio('/static/media/correct.mp3'),
+                correct: new Audio('../static/media/correct.mp3'),
                 play:{
                     correct:()=>{
                         app.sound.correct.currentTime = 0;
@@ -209,14 +286,68 @@
                 const obj = JSON.parse(localStorage.getItem("vocab_lists"));
                 obj[localStorage.getItem("lecture")].progress = Math.floor((app.totalRight/app.totalTries)*100);
                 localStorage.setItem("vocab_lists",JSON.stringify(obj))
-            }
+            },
+            loadMatch:()=>{
+                app.match.keys = [app.list[0], app.list[1]?app.list[1]:app.finishedWords[0], app.list[2]?app.list[2]:app.finishedWords[1], app.list[3]?app.list[3]:app.finishedWords[2]];
+                app.match.left = [app.match.keys[0][0],app.match.keys[1][0],app.match.keys[2][0],app.match.keys[3][0]]
+                app.match.right = [app.match.keys[0][1],app.match.keys[1][1],app.match.keys[2][1],app.match.keys[3][1]]
+                const sortedKeys = [app.match.left,app.match.right]
+                sortedKeys.forEach((curKeys,listInt)=>{
+                    curKeys=shuffle(curKeys)
+                    curKeys.forEach((key,i)=>{
+                        const target = document.querySelector(`label[for=match-${listInt==1?"left":"right"}-${1+i}]`);
+                        target.textContent=key.split(",")[1] ? shuffle(key.split(","))[0] : key;
+                        target.setAttribute("data-key",key)
+                    })
+                })
+                document.querySelectorAll(".right, .wrong, .all-match-contents input:disabled").forEach(e=>{
+                    e.classList.remove("right")
+                    e.classList.remove("wrong")
+                    e.disabled = false;
+                })
+                while(app.list.length<4){
+                    app.list.push(app.finishedWords[app.list.length])
+                }
+                document.querySelector("div.learn-progress div").style.width=`${(app.word.done/(app.list.length+app.word.done))*100}%`
+            },
+            checkState:()=>{
+                document.querySelector(".type-match").style.display = "none"
+                document.querySelector(".type-ask").style.display = "none"
+                if(app.curType=="write"){
+                    document.querySelector(".type-ask").style.display = "block"
+                    app.loadNextWord()
+                }else{
+                    document.querySelector(".type-match").style.display = "block"
+                    app.loadMatch()
+                }
+            },
+            finishedWords:[
+                [
+                    "Hallo",
+                    "Bonjour"
+                ],
+                [
+                    "dangereux",
+                    "gefährlich"
+                ],
+                [
+                    "Danke",
+                    "Merci"
+                ]
+            ]
         }
         window.onload = function () {
-            document.body.querySelector(".content").style.opacity = "1";
+            if(!urlParams.get("methods")){
+                localStorage.setItem("state","select-lecture");
+                location.href = "select-lecture.html"
+            }else{
+                document.body.querySelector(".content").style.opacity = "1";
+            }
             app.state = "guess";
             app.list = shuffle(JSON.parse(localStorage.getItem("vocab_lists"))[localStorage.getItem("lecture")].contents);
             app.word.done = 0;
-            app.loadNextWord();
+            app.curType = app.list.length>3 ? shuffle(urlParams.get("methods").split(","))[0] : "write";
+            app.checkState()
         }
     </script>
 </body>

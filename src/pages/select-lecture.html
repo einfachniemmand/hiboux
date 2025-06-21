@@ -16,8 +16,10 @@
         <span class="header">Wie willst du üben?</span>
         <span class="description">Du kannst auch mehrere Optionen auswählen.</span>
         <div class="button-column">
-            <input type="checkbox" hidden id="opt-1" name="method" onchange="app.click.box()">
+            <input type="checkbox" hidden id="opt-1" name="method" onchange="app.click.box()" data-name="write">
             <label class="button" for="opt-1"><i class="fa-solid fa-pen-fancy"></i>Abfragen</label>
+            <input type="checkbox" hidden id="opt-2" name="method" onchange="app.click.box()" data-name="match">
+            <label class="button" for="opt-2"><i class="fa-solid fa-clone"></i>Verbinden</label>
             <button class="default disabled">Die Auswahl wird bald erweitert</button>
         </div>
         <button class="default bottom fadeout" onclick="setTimeout(()=>{app.click.start(this)},250)">Start</button>
@@ -44,9 +46,11 @@
                     target.classList.add("fadeout");
                     document.querySelector(".content").style.transition = "300ms";
                     localStorage.setItem("state","learn");
+                    const checkedInputs = document.querySelectorAll('input[type=checkbox][data-name]:checked');
+                    const methods = Array.from(checkedInputs).map(input => input.getAttribute('data-name')).join(',');
                     setTimeout(()=>{
                         document.querySelector(".content").classList.add("fadeout");
-                        setTimeout(()=>{location.href = "learn.html"},350)
+                        setTimeout(()=>{location.href = "learn.html?methods=" + encodeURIComponent(methods)},350)
                     },150)
                 }
             }
