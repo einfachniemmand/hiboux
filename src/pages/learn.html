@@ -347,6 +347,9 @@
             app.list = shuffle(JSON.parse(localStorage.getItem("vocab_lists"))[localStorage.getItem("lecture")].contents);
             app.word.done = 0;
             app.curType = app.list.length>3 ? shuffle(urlParams.get("methods").split(","))[0] : "write";
+            if(app.list.length<4&&!urlParams.get("methods").split(",").includes("write")){
+                app.curType=shuffle(urlParams.get("methods").split(","))[0];
+            }
             app.checkState()
         }
     </script>
