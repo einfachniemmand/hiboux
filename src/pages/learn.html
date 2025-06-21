@@ -261,8 +261,8 @@
                     if(app.list.length==0){
                         setTimeout(()=>{
                             app.saveProgress();
+                            app.click.exit.exit()
                         },500)
-                        app.click.exit.exit()
                     }else if(!document.querySelector(".all-match-contents input:not(:disabled)")){
                         app.curType = app.list.length>3 ? shuffle(urlParams.get("methods").split(","))[0] : "write";
                         if(app.list.length<4&&!urlParams.get("methods").split(",").includes("write")){

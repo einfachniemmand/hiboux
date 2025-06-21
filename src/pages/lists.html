@@ -14,10 +14,28 @@
 <body>
     <div class="content">
         <span class="header">Meine Listen</span>
+        <span class="description">Halte eine Liste gedrückt, um mehr Optionen anzuzeigen</span>
         <div class="lists" style="padding-bottom:25px">
             <div class="add-big" onclick="app.click.newlist()">
                 <i class="fa-solid fa-plus-circle"></i> Erstellen
             </div>
+        </div>
+    </div>
+    <div class="ask-outer hidden" style="display: none;transition:300ms" onclick="if(event.target==this){app.click.closeDialog()}">
+        <div class="ask-box">
+            <span class="header" style="user-select: none;display:flex;align-items: center;"></span>
+            <div class="choose-color" style="margin-top:15px">
+                <input type="radio" name="color" id="color-1" hidden checked>
+                <label for="color-1" class="color" style="margin-left: 10px;background: rgb(250, 211, 36);"></label>
+                <input type="radio" name="color" id="color-2" hidden>
+                <label for="color-2" class="color" style="background:rgb(112, 250, 245);"></label>
+                <input type="radio" name="color" id="color-3" hidden>
+                <label for="color-3" class="color" style="background: rgb(97, 232, 171);"></label>
+                <input type="radio" name="color" id="color-4" hidden>
+                <label for="color-4" class="color" style="margin-right: 10px;background:  rgb(219, 168, 86);"></label>
+            </div>
+            <button class="default red" onclick="app.click.removeList(this.getAttribute('data-list'))">Liste vernichten</button>
+            <button class="default-small" onclick="app.click.closeDialog()">Schließen</button> 
         </div>
     </div>
     <script>
@@ -45,7 +63,66 @@
                     setTimeout(()=>{
                         document.querySelector(".content").classList.add("fadeout");
                         setTimeout(()=>{location.href = "edit.html"},300)
-                    },250)
+                    },150)
+                },
+                openDialog:(key)=>{
+                    document.querySelector('.ask-outer').style.display = '';
+                    document.querySelector('.ask-box .header').innerHTML = `<input id="cv" value="${key}" placeholder="${key}"><label for="cv"><i class='fa-solid fa-pen'></i></label>`;
+                    document.querySelector('.ask-box button.red').setAttribute("data-list", key);
+                    let lists = JSON.parse(localStorage.getItem('vocab_lists'));
+                    let color = lists[key]?.color;
+                    if (color) {
+                        const colorRadios = document.querySelectorAll('.choose-color input[type="radio"]');
+                        colorRadios.forEach(radio => {
+                            const label = document.querySelector(`label[for="${radio.id}"]`);
+                            if (label && label.style.background === color) {
+                                radio.checked = true;
+                            }
+                        });
+                    }
+                    setTimeout(()=>{
+                        document.querySelector('.ask-outer').classList.remove('hidden');
+                    },10)
+                },
+                closeDialog:()=>{
+                    const askOuter = document.querySelector('.ask-outer');
+                    const input = askOuter.querySelector('.ask-box .header input');
+                    if (input && input.value.trim() !== "") {
+                        const oldName = askOuter.querySelector('.ask-box button.red').getAttribute("data-list");
+                        const newName = input.value.trim();
+                        let lists = JSON.parse(localStorage.getItem('vocab_lists'));
+                        const colorInput = askOuter.querySelector('.choose-color input[type="radio"]:checked');
+                        let newColor = lists[oldName]?.color;
+                        if (colorInput) {
+                            const colorLabel = askOuter.querySelector(`label[for="${colorInput.id}"]`);
+                            if (colorLabel && colorLabel.style.background) {
+                                newColor = colorLabel.style.background;
+                            }
+                        }
+                        if (oldName !== newName) {
+                            if (!lists[newName]) {
+                                lists[newName] = lists[oldName];
+                                delete lists[oldName];
+                            }
+                        }
+                        if (lists[newName] && lists[newName].color !== newColor) {
+                            lists[newName].color = newColor;
+                        }
+                        localStorage.setItem('vocab_lists', JSON.stringify(lists));
+                    }
+                    askOuter.classList.add('hidden');
+                    setTimeout(()=>{
+                        askOuter.style.display = 'none';
+                    },290)
+                    window.onload();
+                },
+                removeList:(name)=>{
+                    let lists = JSON.parse(localStorage.getItem('vocab_lists'));
+                    delete lists[name];
+                    localStorage.setItem('vocab_lists', JSON.stringify(lists));
+                    app.click.closeDialog();
+                    document.querySelector('.content').style.opacity="0";
+                    setTimeout(() => { location.reload(); }, 300);
                 }
             }
         }
@@ -54,8 +131,30 @@
             if(!JSON.parse(localStorage.getItem('vocab_lists'))){
                 localStorage.setItem('vocab_lists',JSON.stringify({}));
             }
+            document.querySelectorAll(".default-list").forEach(e=>{
+                e.style.display = "none"
+            })
             Object.keys(JSON.parse(localStorage.getItem("vocab_lists"))).forEach((key)=>{
-                document.querySelector(".lists").innerHTML=`<div onclick='app.click.lecture(this)' class='default-list' style='background:${JSON.parse(localStorage.getItem("vocab_lists"))[key].color}'>${key.replaceAll("<","&lt;").replace(/\*(.*?)\*/g, "<i>$1</i>")}</div>`+document.querySelector(".lists").innerHTML
+                const listDiv = document.createElement('div');
+                listDiv.className = 'default-list';
+                listDiv.style.background = JSON.parse(localStorage.getItem("vocab_lists"))[key].color;
+                listDiv.innerHTML = key.replaceAll("<","&lt;").replace(/\*(.*?)\*/g, "<i>$1</i>");
+                listDiv.onclick = function() { app.click.lecture(this); };
+                let pressTimer;
+                listDiv.addEventListener('touchstart', function(e) {
+                    pressTimer = setTimeout(() => {
+                        app.click.openDialog(key)
+                        e.preventDefault();
+                    }, 600);
+                });
+                listDiv.addEventListener('touchend', function(e) {
+                    clearTimeout(pressTimer);
+                });
+                listDiv.addEventListener('touchmove', function(e) {
+                    clearTimeout(pressTimer);
+                });
+
+                document.querySelector(".lists").prepend(listDiv);
             })
         }
     </script>
