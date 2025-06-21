@@ -12,6 +12,10 @@ body {
     width: 100vw;
     background:transparent;
 }
+.hide-mode {
+    opacity: 0;
+    filter:blur(10px);
+}
 button.default-small {
     color:var(--accent-dark);
     margin-top:15px;
@@ -26,6 +30,65 @@ button.default-small {
     align-items: center;
     justify-content: center;
     user-select: none;
+}
+.ask-box .header input {
+    font-size: inherit;
+    font-family: inherit;
+    font-weight: inherit;
+    width: 100%;
+    border:none;
+    outline: transparent;
+    text-align: center;
+}
+.ask-box .header i {
+    color:rgb(150,150,150);
+    font-size:19px;
+    height: 100%;
+}
+.left-match,.right-match {
+    width: 50%;
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+}
+.left-match label,.right-match label {
+    border:2px solid rgba(0,0,0,0.2);
+    height: 75px;
+    margin-bottom:15px;
+    width: calc(100% - 15px);
+    box-shadow: 0 4px 0 0 rgba(0,0,0,0.2);
+    background:rgba(0,0,0,0.007);
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 25px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+}
+.all-match-contents input:checked + label {
+    box-shadow: 0 1px 0 0 rgba(0,0,0,0.2);
+    transform: translateY(3px);
+    background:rgba(0,0,0,0.05);
+}
+.all-match-contents input.right + label {
+    box-shadow: 0 1px 0 0 rgba(0,255,0,0.2);
+    transform: translateY(3px);
+    background:rgba(0,255,0,0.09);
+    color:rgb(100,100,100);
+    cursor: default;
+}
+.all-match-contents input.wrong + label {
+    border:2px solid rgba(255,0,0,0.2);
+    background:rgba(255,0,0,0.09);
+}
+.all-match-contents input.wrong:not(:checked) + label {
+    box-shadow: 0 4px 0 0 rgba(255,0,0,0.2);
+}
+.all-match-contents {
+    display: flex;
+    margin-top:30px;
 }
 .ask-outer {
     position:fixed;
@@ -396,7 +459,6 @@ div.outcast-bottom {
     padding:5px;
     border-radius: 15px;
     transition: 150ms;
-    touch-action: none;
 }
 .translation.removed {
     filter: blur(2px);
@@ -577,6 +639,8 @@ div.content {
     padding-right:10px;
     max-height: calc(100vh - 175px);
     position: relative;
+    padding-bottom: 150px;
+    padding-top:150px
 }
 div.add-big {
     margin-top:15px;
@@ -727,4 +791,13 @@ button.default.red:active {
 .content{
     -ms-overflow-style: none;
     scrollbar-width: none;
+}
+*:focus {
+    outline: none;
+}
+* {
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-focus-ring-color: transparent;
+    box-shadow: none;
 }
