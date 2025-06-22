@@ -1,0 +1,12 @@
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('Bricolage_Grotesque/Bricolage_Grotesque.ttf') format('truetype');
+  font-weight: 300 800;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Funnel Sans';
+  src: url('Funnel_Sans/Funnel_Sans.ttf') format('truetype');
+  font-weight: 300 800;
+  font-style: normal;
+}
